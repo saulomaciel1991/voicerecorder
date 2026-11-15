@@ -6,7 +6,11 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.sm.voicerecorder.model.AppProfile
 
+// =======================
+// Temas Mágicos (Kids)
+// =======================
 private val MagicLightColorScheme = lightColorScheme(
     primary = MagicLilacPrimary,
     onPrimary = MagicLilacOnPrimary,
@@ -44,12 +48,55 @@ private val MagicDarkColorScheme = darkColorScheme(
     onSurfaceVariant = Color(0xFFD1C4E9)
 )
 
+// =======================
+// Temas Padrão (Adulto)
+// =======================
+private val DefaultLightColorScheme = lightColorScheme(
+    primary = DefaultPrimary,
+    onPrimary = DefaultOnPrimary,
+    primaryContainer = DefaultPrimaryContainer,
+    onPrimaryContainer = DefaultOnPrimaryContainer,
+    secondary = DefaultSecondary,
+    onSecondary = DefaultOnSecondary,
+    secondaryContainer = DefaultSecondaryContainer,
+    onSecondaryContainer = DefaultOnSecondaryContainer,
+    tertiary = DefaultTertiary,
+    background = DefaultBackground,
+    onBackground = DefaultOnSurface,
+    surface = DefaultSurface,
+    onSurface = DefaultOnSurface,
+    surfaceVariant = DefaultSurfaceVariant,
+    onSurfaceVariant = DefaultOnSurfaceVariant
+)
+
+private val DefaultDarkColorScheme = darkColorScheme(
+    primary = DefaultDarkPrimary,
+    onPrimary = Color(0xFF003258),
+    primaryContainer = DefaultDarkPrimaryContainer,
+    onPrimaryContainer = DefaultDarkOnSurface,
+    secondary = Color(0xFFB0BEC5),
+    onSecondary = Color(0xFF263238),
+    secondaryContainer = Color(0xFF37474F),
+    onSecondaryContainer = Color(0xFFCFD8DC),
+    tertiary = DefaultTertiary,
+    background = DefaultDarkBackground,
+    onBackground = DefaultDarkOnSurface,
+    surface = DefaultDarkSurface,
+    onSurface = DefaultDarkOnSurface,
+    surfaceVariant = DefaultDarkSurfaceVariant,
+    onSurfaceVariant = Color(0xFF9E9E9E)
+)
+
 @Composable
 fun VoiceRecorderTheme(
+    profile: AppProfile = AppProfile.KIDS,
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) MagicDarkColorScheme else MagicLightColorScheme
+    val colorScheme = when (profile) {
+        AppProfile.KIDS -> if (darkTheme) MagicDarkColorScheme else MagicLightColorScheme
+        AppProfile.DEFAULT -> if (darkTheme) DefaultDarkColorScheme else DefaultLightColorScheme
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,

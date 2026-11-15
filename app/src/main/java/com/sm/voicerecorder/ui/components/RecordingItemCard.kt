@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
@@ -40,12 +39,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sm.voicerecorder.model.AppProfile
 import com.sm.voicerecorder.model.RecordingItem
 import com.sm.voicerecorder.util.Formatters
 
@@ -60,29 +59,32 @@ fun RecordingItemCard(
     onSeek: (Int) -> Unit,
     onShareClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    profile: AppProfile = AppProfile.KIDS
 ) {
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    val isKids = profile == AppProfile.KIDS
+    val cardRadius = if (isKids) 22.dp else 16.dp
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .then(
-                if (isCurrent) Modifier.border(
+                if (isCurrent && isKids) Modifier.border(
                     2.dp,
                     MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    RoundedCornerShape(22.dp)
+                    RoundedCornerShape(cardRadius)
                 ) else Modifier
             ),
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(cardRadius),
         colors = CardDefaults.cardColors(
             containerColor = if (isCurrent) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isKids) 0.7f else 0.4f)
             } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
             }
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isCurrent) 4.dp else 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isCurrent) 3.dp else 1.dp)
     ) {
         Column(
             modifier = Modifier
@@ -93,10 +95,10 @@ fun RecordingItemCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Botão Mágico de Play/Pause
+                // Botão de Play/Pause
                 FilledIconButton(
                     onClick = onPlayPauseClick,
-                    shape = CircleShape,
+                    shape = if (isKids) CircleShape else RoundedCornerShape(12.dp),
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = if (isCurrent && isPlaying) {
                             MaterialTheme.colorScheme.secondary
@@ -104,40 +106,42 @@ fun RecordingItemCard(
                             MaterialTheme.colorScheme.primary
                         }
                     ),
-                    modifier = Modifier.size(50.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         imageVector = if (isCurrent && isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                         contentDescription = if (isCurrent && isPlaying) "Pausar" else "Ouvir",
                         tint = Color.White,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 }
 
                 Spacer(modifier = Modifier.width(14.dp))
 
-                // Detalhes da Gravação Mágica
+                // Detalhes da Gravação
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = recording.name,
                             style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontWeight = if (isKids) FontWeight.Bold else FontWeight.SemiBold,
+                                fontSize = 15.sp
                             ),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = Icons.Filled.AutoAwesome,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.tertiary,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        if (isKids) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Filled.AutoAwesome,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -160,26 +164,26 @@ fun RecordingItemCard(
                     }
                 }
 
-                // Botão de Compartilhar
+                // Compartilhar
                 IconButton(onClick = onShareClick) {
                     Icon(
                         imageVector = Icons.Filled.Share,
-                        contentDescription = "Enviar áudio",
-                        tint = MaterialTheme.colorScheme.primary
+                        contentDescription = "Compartilhar",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                // Botão de Excluir
+                // Excluir
                 IconButton(onClick = { showDeleteConfirmDialog = true }) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
-                        contentDescription = "Excluir áudio",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.75f)
+                        contentDescription = "Excluir",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
                     )
                 }
             }
 
-            // Barra de Progresso com cores mágicas
+            // Barra de Progresso do Player
             AnimatedVisibility(visible = isCurrent) {
                 Column(modifier = Modifier.padding(top = 10.dp)) {
                     val duration = if (playbackDurationMs > 0) playbackDurationMs else recording.durationMs.toInt()
@@ -193,7 +197,7 @@ fun RecordingItemCard(
                             onSeek((newProgress * duration).toInt())
                         },
                         colors = SliderDefaults.colors(
-                            thumbColor = MaterialTheme.colorScheme.secondary,
+                            thumbColor = if (isKids) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
                             activeTrackColor = MaterialTheme.colorScheme.primary,
                             inactiveTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
                         ),
@@ -211,7 +215,7 @@ fun RecordingItemCard(
                         )
                         Text(
                             text = Formatters.formatDuration(duration.toLong()),
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -225,17 +229,13 @@ fun RecordingItemCard(
                         .padding(top = 4.dp),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(
-                            text = "⏱ ${Formatters.formatDuration(recording.durationMs)}",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
+                    Text(
+                        text = if (isKids) "⏱ ${Formatters.formatDuration(recording.durationMs)}" else "Duração: ${Formatters.formatDuration(recording.durationMs)}",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = if (isKids) FontWeight.Bold else FontWeight.Normal
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
@@ -244,8 +244,14 @@ fun RecordingItemCard(
     if (showDeleteConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
-            title = { Text(text = "Excluir áudio mágico? 🗑️") },
-            text = { Text(text = "Deseja apagar a gravação \"${recording.name}\"?") },
+            title = {
+                Text(text = if (isKids) "Excluir áudio mágico? 🗑️" else "Excluir gravação?")
+            },
+            text = {
+                Text(
+                    text = if (isKids) "Deseja apagar a gravação \"${recording.name}\"?" else "Tem certeza de que deseja excluir \"${recording.name}\"? Essa ação não pode ser desfeita."
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -253,12 +259,16 @@ fun RecordingItemCard(
                         onDeleteClick()
                     }
                 ) {
-                    Text(text = "Sim, apagar", color = MaterialTheme.colorScheme.error)
+                    Text(
+                        text = if (isKids) "Sim, apagar" else "Excluir",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmDialog = false }) {
-                    Text(text = "Não, guardar!")
+                    Text(text = if (isKids) "Não, guardar!" else "Cancelar")
                 }
             }
         )

@@ -10,6 +10,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sm.voicerecorder.audio.AudioPlayer
 import com.sm.voicerecorder.audio.AudioRecorder
+import com.sm.voicerecorder.model.AppProfile
 import com.sm.voicerecorder.model.RecordingItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -30,6 +31,15 @@ class RecorderViewModel(application: Application) : AndroidViewModel(application
     private val player = AudioPlayer()
 
     private val prefs = application.getSharedPreferences("voice_recorder_prefs", Context.MODE_PRIVATE)
+
+    private val _profile = MutableStateFlow(
+        try {
+            AppProfile.valueOf(prefs.getString("app_profile", AppProfile.KIDS.name) ?: AppProfile.KIDS.name)
+        } catch (_: Exception) {
+            AppProfile.KIDS
+        }
+    )
+    val profile: StateFlow<AppProfile> = _profile.asStateFlow()
 
     private val _childName = MutableStateFlow(prefs.getString("child_name", "") ?: "")
     val childName: StateFlow<String> = _childName.asStateFlow()
@@ -104,6 +114,11 @@ class RecorderViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun setProfile(newProfile: AppProfile) {
+        _profile.value = newProfile
+        prefs.edit().putString("app_profile", newProfile.name).apply()
+    }
+
     fun updateChildName(newName: String) {
         val trimmed = newName.trim()
         _childName.value = trimmed
@@ -114,7 +129,12 @@ class RecorderViewModel(application: Application) : AndroidViewModel(application
         // Para qualquer playback em andamento
         stopPlayback()
 
-        val prefix = if (_childName.value.isNotBlank()) "Audio_${_childName.value.replace(" ", "_")}" else "AudioMagico"
+        val prefix = if (_profile.value == AppProfile.KIDS) {
+            if (_childName.value.isNotBlank()) "Audio_${_childName.value.replace(" ", "_")}" else "AudioMagico"
+        } else {
+            "Gravacao"
+        }
+
         val timestamp = SimpleDateFormat("ddMMyyyy_HHmmss", Locale.getDefault()).format(Date())
         val newFile = File(recordingsDir, "${prefix}_$timestamp.m4a")
 

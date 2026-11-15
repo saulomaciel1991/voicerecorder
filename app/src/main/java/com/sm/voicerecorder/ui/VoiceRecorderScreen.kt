@@ -29,9 +29,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicNone
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
@@ -67,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sm.voicerecorder.model.AppProfile
 import com.sm.voicerecorder.ui.components.RecordingItemCard
 import com.sm.voicerecorder.util.Formatters
 import com.sm.voicerecorder.viewmodel.RecorderViewModel
@@ -78,6 +81,9 @@ fun VoiceRecorderScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
+    val profile by viewModel.profile.collectAsState()
+    val isKids = profile == AppProfile.KIDS
 
     val recordings by viewModel.recordings.collectAsState()
     val isRecording by viewModel.isRecording.collectAsState()
@@ -126,48 +132,86 @@ fun VoiceRecorderScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
+                navigationIcon = {
+                    // Botão para alternar entre Perfis (Adulto vs Infantil)
+                    IconButton(
+                        onClick = {
+                            viewModel.setProfile(if (isKids) AppProfile.DEFAULT else AppProfile.KIDS)
+                        }
+                    ) {
+                        if (isKids) {
+                            Icon(
+                                imageVector = Icons.Filled.AccountCircle,
+                                contentDescription = "Mudar para Modo Padrão",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Filled.AutoAwesome,
+                                contentDescription = "Mudar para Modo Mágico",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                },
                 title = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.AutoAwesome,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            if (isKids) {
+                                Icon(
+                                    imageVector = Icons.Filled.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                            }
+
                             Text(
-                                text = if (childName.isNotBlank()) "Gravador da $childName" else "Gravador Mágico",
+                                text = if (isKids) {
+                                    if (childName.isNotBlank()) "Gravador da $childName" else "Gravador Mágico"
+                                } else {
+                                    "Gravador de Voz"
+                                },
                                 style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Icon(
-                                imageVector = Icons.Filled.Palette,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(20.dp)
-                            )
+
+                            if (isKids) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(
+                                    imageVector = Icons.Filled.Palette,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
                         Text(
-                            text = if (recordings.isEmpty()) "Pronto para criar mágica!" else "${recordings.size} áudios encantados ✨",
+                            text = if (isKids) {
+                                if (recordings.isEmpty()) "Pronto para a mágica!" else "${recordings.size} áudios encantados ✨"
+                            } else {
+                                if (recordings.isEmpty()) "Nenhuma gravação" else "${recordings.size} gravações salvas"
+                            },
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showNameDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Filled.Edit,
-                            contentDescription = "Mudar nome da artista",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                    if (isKids) {
+                        IconButton(onClick = { showNameDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Editar nome",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -177,6 +221,7 @@ fun VoiceRecorderScreen(
         },
         bottomBar = {
             RecordingBottomBar(
+                isKids = isKids,
                 isRecording = isRecording,
                 recordingDurationSeconds = recordingDuration,
                 onRecordClick = { handleRecordButtonClick() }
@@ -189,7 +234,7 @@ fun VoiceRecorderScreen(
                 .padding(innerPadding)
         ) {
             if (recordings.isEmpty()) {
-                // Tela Vazia Lúdica com Varinha e Tintas
+                // Estado Vazio (Customizado por Perfil)
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -197,46 +242,72 @@ fun VoiceRecorderScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(110.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Filled.AutoAwesome,
-                                contentDescription = null,
-                                modifier = Modifier.size(54.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                    if (isKids) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(110.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Filled.AutoAwesome,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(54.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Text(
+                            text = if (childName.isNotBlank()) "Oi, $childName! Pronta para a mágica? 🪄🎨" else "Pronta para criar mágica? 🪄🎨",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Toque no botão mágico abaixo para gravar historinhas, canções e segredos encantados!",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 22.sp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Filled.MicNone,
+                            contentDescription = null,
+                            modifier = Modifier.size(80.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Nenhuma gravação ainda",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Toque no botão de microfone abaixo para iniciar uma nova gravação de áudio.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Text(
-                        text = if (childName.isNotBlank()) "Oi, $childName! Pronta para a mágica? 🪄🎨" else "Pronta para criar mágica? 🪄🎨",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Toque no botão mágico roxinho abaixo para gravar suas historinhas, canções e segredos encantados!",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 22.sp
-                    )
                 }
             } else {
-                // Lista Encantada de Gravações
+                // Lista de Gravações
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(recordings, key = { it.file.absolutePath }) { recording ->
                         val isCurrent = playingFile?.absolutePath == recording.file.absolutePath
@@ -249,7 +320,8 @@ fun VoiceRecorderScreen(
                             onPlayPauseClick = { viewModel.togglePlayPause(recording) },
                             onSeek = { viewModel.seekTo(it) },
                             onShareClick = { viewModel.shareRecording(context, recording) },
-                            onDeleteClick = { viewModel.deleteRecording(recording) }
+                            onDeleteClick = { viewModel.deleteRecording(recording) },
+                            profile = profile
                         )
                     }
                 }
@@ -316,6 +388,7 @@ fun VoiceRecorderScreen(
 
 @Composable
 fun RecordingBottomBar(
+    isKids: Boolean,
     isRecording: Boolean,
     recordingDurationSeconds: Long,
     onRecordClick: () -> Unit,
@@ -325,20 +398,20 @@ fun RecordingBottomBar(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding(),
-        tonalElevation = 10.dp,
-        shadowElevation = 12.dp,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        tonalElevation = if (isKids) 10.dp else 6.dp,
+        shadowElevation = if (isKids) 12.dp else 6.dp,
+        shape = if (isKids) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(0.dp),
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 18.dp),
+                .padding(horizontal = 24.dp, vertical = if (isKids) 18.dp else 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Efeito de Gravação com Animação Mágica e Estrelinhas
+            // Efeito visual enquanto grava
             AnimatedVisibility(visible = isRecording) {
-                val infiniteTransition = rememberInfiniteTransition(label = "magicPulse")
+                val infiniteTransition = rememberInfiniteTransition(label = "pulse")
                 val pulseScale by infiniteTransition.animateFloat(
                     initialValue = 0.85f,
                     targetValue = 1.3f,
@@ -352,58 +425,77 @@ fun RecordingBottomBar(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(bottom = 14.dp)
+                    modifier = Modifier.padding(bottom = 12.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(16.dp)
+                            .size(14.dp)
                             .scale(pulseScale)
                             .clip(CircleShape)
-                            .background(
-                                Brush.radialGradient(
-                                    listOf(
-                                        MaterialTheme.colorScheme.secondary,
-                                        MaterialTheme.colorScheme.primary
+                            .then(
+                                if (isKids) {
+                                    Modifier.background(
+                                        Brush.radialGradient(
+                                            listOf(
+                                                MaterialTheme.colorScheme.secondary,
+                                                MaterialTheme.colorScheme.primary
+                                            )
+                                        )
                                     )
-                                )
+                                } else {
+                                    Modifier.background(Color(0xFFE53935))
+                                }
                             )
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Gravando mágica... ✨ ${Formatters.formatDurationSeconds(recordingDurationSeconds)}",
+                        text = if (isKids) {
+                            "Gravando mágica... ✨ ${Formatters.formatDurationSeconds(recordingDurationSeconds)}"
+                        } else {
+                            "Gravando: ${Formatters.formatDurationSeconds(recordingDurationSeconds)}"
+                        },
                         style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
+                            fontWeight = FontWeight.Bold,
+                            color = if (isKids) MaterialTheme.colorScheme.primary else Color(0xFFE53935)
                         )
                     )
                 }
             }
 
-            // Botão Principal Mágico (Lilás / Magenta)
+            // Botão Principal (Gravar / Parar)
             FilledIconButton(
                 onClick = onRecordClick,
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = if (isRecording) {
-                        MaterialTheme.colorScheme.secondary
-                    } else {
-                        MaterialTheme.colorScheme.primary
+                    containerColor = when {
+                        isRecording -> if (isKids) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
+                        isKids -> MaterialTheme.colorScheme.primary
+                        else -> Color(0xFFE53935)
                     }
                 ),
-                modifier = Modifier.size(74.dp)
+                modifier = Modifier.size(if (isKids) 72.dp else 64.dp)
             ) {
                 Icon(
-                    imageVector = if (isRecording) Icons.Filled.Stop else Icons.Filled.AutoAwesome,
-                    contentDescription = if (isRecording) "Guardar mágica" else "Criar mágica",
+                    imageVector = when {
+                        isRecording -> Icons.Filled.Stop
+                        isKids -> Icons.Filled.AutoAwesome
+                        else -> Icons.Filled.Mic
+                    },
+                    contentDescription = if (isRecording) "Parar" else "Gravar",
                     tint = Color.White,
-                    modifier = Modifier.size(38.dp)
+                    modifier = Modifier.size(if (isKids) 36.dp else 32.dp)
                 )
             }
 
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = if (isRecording) "Toque para guardar o áudio ✨" else "Toque na varinha para gravar 🪄",
+                text = when {
+                    isRecording && isKids -> "Toque para guardar o áudio ✨"
+                    isRecording -> "Toque para parar e salvar"
+                    isKids -> "Toque na varinha para gravar 🪄"
+                    else -> "Toque para gravar"
+                },
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
