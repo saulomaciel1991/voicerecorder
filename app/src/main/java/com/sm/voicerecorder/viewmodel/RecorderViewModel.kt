@@ -103,8 +103,8 @@ class RecorderViewModel(application: Application) : AndroidViewModel(application
         // Para qualquer playback em andamento
         stopPlayback()
 
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val newFile = File(recordingsDir, "Gravacao_$timestamp.m4a")
+        val timestamp = SimpleDateFormat("ddMMyyyy_HHmmss", Locale.getDefault()).format(Date())
+        val newFile = File(recordingsDir, "AudioMagico_$timestamp.m4a")
 
         val success = recorder.start(newFile)
         if (success) {

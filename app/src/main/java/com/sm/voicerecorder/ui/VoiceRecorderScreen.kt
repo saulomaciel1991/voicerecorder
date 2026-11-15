@@ -29,15 +29,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.MicNone
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -116,17 +115,40 @@ fun VoiceRecorderScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.AutoAwesome,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Gravador Mágico",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.Filled.Palette,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                         Text(
-                            text = "Gravador de Voz",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            text = if (recordings.isEmpty()) "Sem gravações" else "${recordings.size} gravações salvas",
-                            style = MaterialTheme.typography.labelMedium,
+                            text = if (recordings.isEmpty()) "Pronto para criar mágica!" else "${recordings.size} áudios encantados ✨",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -150,7 +172,7 @@ fun VoiceRecorderScreen(
                 .padding(innerPadding)
         ) {
             if (recordings.isEmpty()) {
-                // Estado Vazio
+                // Tela Vazia Lúdica com Varinha e Tintas
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -158,32 +180,46 @@ fun VoiceRecorderScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.MicNone,
-                        contentDescription = null,
-                        modifier = Modifier.size(80.dp),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(110.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Filled.AutoAwesome,
+                                contentDescription = null,
+                                modifier = Modifier.size(54.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
                     Text(
-                        text = "Nenhuma gravação ainda",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "Pronta para criar mágica? 🪄🎨",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
                     )
+
                     Spacer(modifier = Modifier.height(8.dp))
+
                     Text(
-                        text = "Toque no botão vermelho abaixo para começar a gravar seus áudios sem anúncios ou limites.",
+                        text = "Toque no botão mágico roxinho abaixo para gravar suas historinhas, canções e segredos encantados!",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        lineHeight = 22.sp
                     )
                 }
             } else {
-                // Lista de Gravações
+                // Lista Encantada de Gravações
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     items(recordings, key = { it.file.absolutePath }) { recording ->
                         val isCurrent = playingFile?.absolutePath == recording.file.absolutePath
@@ -216,24 +252,25 @@ fun RecordingBottomBar(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding(),
-        tonalElevation = 8.dp,
-        shadowElevation = 8.dp,
+        tonalElevation = 10.dp,
+        shadowElevation = 12.dp,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(horizontal = 24.dp, vertical = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Indicador de Gravação Ativa e Cronômetro
+            // Efeito de Gravação com Animação Mágica e Estrelinhas
             AnimatedVisibility(visible = isRecording) {
-                val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+                val infiniteTransition = rememberInfiniteTransition(label = "magicPulse")
                 val pulseScale by infiniteTransition.animateFloat(
                     initialValue = 0.85f,
-                    targetValue = 1.25f,
+                    targetValue = 1.3f,
                     animationSpec = infiniteRepeatable(
-                        animation = tween(600),
+                        animation = tween(500),
                         repeatMode = RepeatMode.Reverse
                     ),
                     label = "pulseScale"
@@ -242,46 +279,59 @@ fun RecordingBottomBar(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    modifier = Modifier.padding(bottom = 14.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(12.dp)
+                            .size(16.dp)
                             .scale(pulseScale)
                             .clip(CircleShape)
-                            .background(Color.Red)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.secondary,
+                                        MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                            )
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Gravando: ${Formatters.formatDurationSeconds(recordingDurationSeconds)}",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.Red
+                        text = "Gravando mágica... ✨ ${Formatters.formatDurationSeconds(recordingDurationSeconds)}",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     )
                 }
             }
 
-            // Botão Principal (Gravar / Parar)
+            // Botão Principal Mágico (Lilás / Magenta)
             FilledIconButton(
                 onClick = onRecordClick,
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = if (isRecording) MaterialTheme.colorScheme.error else Color(0xFFE53935)
+                    containerColor = if (isRecording) {
+                        MaterialTheme.colorScheme.secondary
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
                 ),
-                modifier = Modifier.size(68.dp)
+                modifier = Modifier.size(74.dp)
             ) {
                 Icon(
-                    imageVector = if (isRecording) Icons.Filled.Stop else Icons.Filled.Mic,
-                    contentDescription = if (isRecording) "Parar gravação" else "Iniciar gravação",
+                    imageVector = if (isRecording) Icons.Filled.Stop else Icons.Filled.AutoAwesome,
+                    contentDescription = if (isRecording) "Guardar mágica" else "Criar mágica",
                     tint = Color.White,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(38.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = if (isRecording) "Toque para salvar" else "Toque para gravar",
-                style = MaterialTheme.typography.labelMedium,
+                text = if (isRecording) "Toque para guardar o áudio ✨" else "Toque na varinha para gravar 🪄",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
