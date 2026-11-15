@@ -29,6 +29,11 @@ class RecorderViewModel(application: Application) : AndroidViewModel(application
     private val recorder = AudioRecorder(application)
     private val player = AudioPlayer()
 
+    private val prefs = application.getSharedPreferences("voice_recorder_prefs", Context.MODE_PRIVATE)
+
+    private val _childName = MutableStateFlow(prefs.getString("child_name", "") ?: "")
+    val childName: StateFlow<String> = _childName.asStateFlow()
+
     private val recordingsDir: File by lazy {
         val dir = application.getExternalFilesDir(Environment.DIRECTORY_RECORDINGS)
             ?: File(application.filesDir, "recordings")
@@ -99,12 +104,19 @@ class RecorderViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateChildName(newName: String) {
+        val trimmed = newName.trim()
+        _childName.value = trimmed
+        prefs.edit().putString("child_name", trimmed).apply()
+    }
+
     fun startRecording(): Boolean {
         // Para qualquer playback em andamento
         stopPlayback()
 
+        val prefix = if (_childName.value.isNotBlank()) "Audio_${_childName.value.replace(" ", "_")}" else "AudioMagico"
         val timestamp = SimpleDateFormat("ddMMyyyy_HHmmss", Locale.getDefault()).format(Date())
-        val newFile = File(recordingsDir, "AudioMagico_$timestamp.m4a")
+        val newFile = File(recordingsDir, "${prefix}_$timestamp.m4a")
 
         val success = recorder.start(newFile)
         if (success) {

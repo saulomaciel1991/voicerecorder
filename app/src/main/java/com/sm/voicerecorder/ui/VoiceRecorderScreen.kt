@@ -30,18 +30,23 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -77,11 +82,14 @@ fun VoiceRecorderScreen(
     val recordings by viewModel.recordings.collectAsState()
     val isRecording by viewModel.isRecording.collectAsState()
     val recordingDuration by viewModel.recordingDurationSeconds.collectAsState()
+    val childName by viewModel.childName.collectAsState()
 
     val playingFile by viewModel.playingFile.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val playbackProgressMs by viewModel.playbackProgressMs.collectAsState()
     val playbackDurationMs by viewModel.playbackDurationMs.collectAsState()
+
+    var showNameDialog by remember { mutableStateOf(false) }
 
     var hasRecordPermission by remember {
         mutableStateOf(
@@ -132,7 +140,7 @@ fun VoiceRecorderScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Gravador Mágico",
+                                text = if (childName.isNotBlank()) "Gravador da $childName" else "Gravador Mágico",
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     color = MaterialTheme.colorScheme.primary
@@ -150,6 +158,15 @@ fun VoiceRecorderScreen(
                             text = if (recordings.isEmpty()) "Pronto para criar mágica!" else "${recordings.size} áudios encantados ✨",
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showNameDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Mudar nome da artista",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -198,7 +215,7 @@ fun VoiceRecorderScreen(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
-                        text = "Pronta para criar mágica? 🪄🎨",
+                        text = if (childName.isNotBlank()) "Oi, $childName! Pronta para a mágica? 🪄🎨" else "Pronta para criar mágica? 🪄🎨",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center
@@ -238,6 +255,62 @@ fun VoiceRecorderScreen(
                 }
             }
         }
+    }
+
+    if (showNameDialog) {
+        var tempName by remember { mutableStateOf(childName) }
+
+        AlertDialog(
+            onDismissRequest = { showNameDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.AutoAwesome,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "Nome da Artista 🪄")
+                }
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Digite o nome para personalizar o gravador mágico:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    OutlinedTextField(
+                        value = tempName,
+                        onValueChange = { tempName = it },
+                        placeholder = { Text("Ex: Clara, Alice, Sofia...") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.updateChildName(tempName)
+                        showNameDialog = false
+                    }
+                ) {
+                    Text(
+                        text = "Salvar ✨",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNameDialog = false }) {
+                    Text(text = "Cancelar")
+                }
+            }
+        )
     }
 }
 
